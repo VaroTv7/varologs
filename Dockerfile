@@ -48,11 +48,13 @@ WORKDIR /app
 # Copy built frontend from stage 1
 COPY --from=frontend-builder /build/dist ./frontend/dist
 
-# Set ownership
+# Set permissions (just in case)
 RUN chown -R node:node /app
 
-# Switch to non-root user
-USER node
+# NOTE: Running as root to avoid volume permission issues on host
+# If you want to use a non-root user, ensure the host ./data folder
+# is owned by uid 1000:1000
+# USER node
 
 # Expose port
 EXPOSE 3001
