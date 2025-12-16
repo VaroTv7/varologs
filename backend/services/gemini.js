@@ -37,11 +37,11 @@ export function setApiKey(key) {
     }
 }
 
-// Model cascade: Try 2.5 first, fallback to 2.0 if overloaded/quota
+// Model cascade: Try 2.5 first, fallback to 2.0, then 1.5 if others fail/overloaded
 const MODELS = [
-    'gemini-2.5-pro',
     'gemini-2.5-flash',
-    'gemini-2.0-flash'
+    'gemini-2.0-flash',
+    'gemini-1.5-flash'
 ];
 
 const TYPE_TRANSLATIONS = {
