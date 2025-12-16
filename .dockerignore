@@ -24,15 +24,11 @@ docs/
 # OS files
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # Test
 coverage/
 *.test.js
 
-# Development files
-frontend/src/
-frontend/public/
-frontend/index.html
-frontend/vite.config.js
-frontend/package*.json
-backend/*.md
+# Note: We do NOT ignore frontend source here because
+# we need it for the multistage build
