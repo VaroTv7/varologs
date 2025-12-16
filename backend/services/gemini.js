@@ -38,15 +38,16 @@ export function setApiKey(key) {
 }
 
 // Model cascade: Waterfall from most powerful/newest to most stable/efficient
+// Validated available models for this environment (Dec 2025)
 const MODELS = [
-    'gemini-3-pro-preview',     // Experimental / Future
-    'gemini-2.5-pro',           // High Intelligence
-    'gemini-2.5-flash-lite',    // Efficient High Int
-    'gemini-2.5-flash',         // Fast High Int
-    'gemini-2.0-flash-lite',    // Efficient Mid
-    'gemini-2.0-flash',         // Stable Mid
-    'gemini-1.5-pro',           // Legacy Pro
-    'gemini-1.5-flash'          // Ultimate Fallback (Stable)
+    'gemini-3-pro-preview',
+    'gemini-2.5-pro',
+    'gemini-2.5-flash-lite',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-2.0-flash',
+    'gemini-pro-latest',        // Generic alias fallback
+    'gemini-flash-latest'       // Generic alias fallback
 ];
 
 const TYPE_TRANSLATIONS = {
