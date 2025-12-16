@@ -103,7 +103,19 @@ Si no encuentras el ítem exacto, devuelve null.`;
                 }
             });
 
-            const text = response.text ? response.text() : (response.response ? response.response.text() : '');
+            // Handle different SDK response structures
+            let text = '';
+            if (response && typeof response.text === 'function') {
+                text = response.text();
+            } else if (response && response.response && typeof response.response.text === 'function') {
+                text = response.response.text();
+            } else if (response && response.candidates && response.candidates[0] && response.candidates[0].content && response.candidates[0].content.parts) {
+                // Manual extraction for raw objects
+                text = response.candidates[0].content.parts.map(p => p.text).join('');
+            } else {
+                console.warn(`Unexpected response format from ${model}:`, JSON.stringify(response));
+                throw new Error('Could not extract text from response');
+            }
 
             if (!text) throw new Error('Empty response from AI');
 
