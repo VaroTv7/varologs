@@ -37,13 +37,6 @@ db.exec(`
     UNIQUE(type, title, year)
   );
 
-  -- Migration for existing databases
-  try {
-    db.prepare('ALTER TABLE items ADD COLUMN metadata TEXT').run();
-  } catch (e) {
-    // Column likely exists, ignore
-  }
-
   -- User reviews per item
   CREATE TABLE IF NOT EXISTS reviews (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -80,6 +73,13 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
   CREATE INDEX IF NOT EXISTS idx_lists_user ON lists(user_id);
 `);
+
+// Migration for existing databases
+try {
+  db.prepare('ALTER TABLE items ADD COLUMN metadata TEXT').run();
+} catch (e) {
+  // Column likely exists, ignore
+}
 
 console.log('Database initialized at:', dbPath);
 
