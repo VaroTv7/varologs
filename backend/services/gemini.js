@@ -5,8 +5,8 @@ const ai = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
 
 // Model cascade: try newer models first, fallback to older ones
 const MODELS = [
-    'gemini-2.5-flash',
     'gemini-2.0-flash',
+    'gemini-1.5-pro',
     'gemini-1.5-flash'
 ];
 
@@ -67,7 +67,8 @@ Si no encuentras información exacta, usa null en los campos desconocidos.`;
             console.log(`Success with ${model}`);
             return data;
         } catch (error) {
-            console.log(`Model ${model} failed:`, error.message);
+            console.error(`Model ${model} failed with query "${query}":`, error.message);
+            if (error.response) console.error('Error details:', JSON.stringify(error.response, null, 2));
             lastError = error;
         }
     }

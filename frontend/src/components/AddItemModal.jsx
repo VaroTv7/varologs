@@ -98,6 +98,7 @@ export default function AddItemModal({ onClose, onSuccess }) {
             onSuccess(item);
         } catch (err) {
             console.error('Error creating item:', err);
+            alert(`Error al guardar: ${err.message || 'Error desconocido'}`);
         } finally {
             setLoading(false);
         }
