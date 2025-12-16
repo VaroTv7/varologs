@@ -14,8 +14,7 @@ if (process.env.GEMINI_API_KEY) {
     initializeAI(process.env.GEMINI_API_KEY);
 }
 
-// Model cascade: STRICTLY Gemini 2.5 Flash as requested by user
-// Validated availability for 2025
+// Model cascade: STRICTLY Gemini 2.5 Flash
 const MODELS = [
     'gemini-2.5-flash'
 ];
@@ -58,14 +57,18 @@ Si no encuentras información exacta, usa null en los campos desconocidos.`;
 
     for (const model of MODELS) {
         try {
-            console.log(`Trying model: ${model}`);
+            console.log(`Trying model: ${model} with query: "${query}"`);
 
             const response = await ai.models.generateContent({
                 model,
-                contents: prompt,
+                contents: [{
+                    role: 'user',
+                    parts: [{ text: prompt }]
+                }],
                 config: {
                     temperature: 0.3,
-                    maxOutputTokens: 500
+                    maxOutputTokens: 500,
+                    responseMimeType: 'application/json'
                 }
             });
 
@@ -77,7 +80,11 @@ Si no encuentras información exacta, usa null en los campos desconocidos.`;
             console.log(`Success with ${model}`);
             return data;
         } catch (error) {
-            console.log(`Model ${model} failed:`, error.message);
+            console.error(`Model ${model} failed!`);
+            console.error('Error Details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+            if (error.response) {
+                console.error('API Response:', JSON.stringify(error.response, null, 2));
+            }
             lastError = error;
         }
     }
