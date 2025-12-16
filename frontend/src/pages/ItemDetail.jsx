@@ -22,32 +22,13 @@ const STATUS_OPTIONS = [
 
 // Edit Modal Component
 function EditItemModal({ item, onClose, onSave }) {
-    // Field visibility based on type
-    const showPlatform = ['game'].includes(item.type);
-    const showDev = ['game'].includes(item.type);
-    const showDuration = ['movie', 'anime'].includes(item.type);
-    const showPages = ['book', 'manga'].includes(item.type);
-    const showEpisodes = ['series', 'anime'].includes(item.type);
-    const showSeasons = ['series'].includes(item.type);
-    const showISBN = ['book'].includes(item.type);
-
-    // Initial state with new fields
     const [formData, setFormData] = useState({
         title: item.title || '',
         year: item.year || '',
         creator: item.creator || '',
         genre: item.genre || '',
         synopsis: item.synopsis || '',
-        cover_url: item.cover_url || '',
-        platform: item.platform || '',
-        developer: item.developer || '',
-        publisher: item.publisher || '',
-        duration_min: item.duration_min || '',
-        pages: item.pages || '',
-        episodes: item.episodes || '',
-        seasons: item.seasons || '',
-        isbn: item.isbn || '',
-        status: item.status || ''
+        cover_url: item.cover_url || ''
     });
     const [saving, setSaving] = useState(false);
 
@@ -60,23 +41,12 @@ function EditItemModal({ item, onClose, onSave }) {
             await api(`/items/${item.id}`, {
                 method: 'PUT',
                 body: {
-                    ...formData,
-                    year: formData.year ? parseInt(formData.year) : null,
-                    duration_min: formData.duration_min ? parseInt(formData.duration_min) : null,
-                    pages: formData.pages ? parseInt(formData.pages) : null,
-                    episodes: formData.episodes ? parseInt(formData.episodes) : null,
-                    seasons: formData.seasons ? parseInt(formData.seasons) : null,
-                    // Clean strings
                     title: formData.title.trim(),
+                    year: formData.year ? parseInt(formData.year) : null,
                     creator: formData.creator.trim() || null,
                     genre: formData.genre.trim() || null,
                     synopsis: formData.synopsis.trim() || null,
-                    cover_url: formData.cover_url.trim() || null,
-                    platform: formData.platform.trim() || null,
-                    developer: formData.developer.trim() || null,
-                    publisher: formData.publisher.trim() || null,
-                    isbn: formData.isbn.trim() || null,
-                    status: formData.status.trim() || null
+                    cover_url: formData.cover_url.trim() || null
                 }
             });
             onSave();
@@ -142,8 +112,8 @@ function EditItemModal({ item, onClose, onSave }) {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-sm">
-                                    <div className="form-group">
+                                <div className="flex gap-sm">
+                                    <div className="form-group" style={{ flex: 1 }}>
                                         <label className="form-label">Año</label>
                                         <input
                                             type="number"
@@ -155,7 +125,7 @@ function EditItemModal({ item, onClose, onSave }) {
                                             onChange={(e) => setFormData({ ...formData, year: e.target.value })}
                                         />
                                     </div>
-                                    <div className="form-group">
+                                    <div className="form-group" style={{ flex: 1 }}>
                                         <label className="form-label">Género</label>
                                         <input
                                             type="text"
@@ -165,79 +135,19 @@ function EditItemModal({ item, onClose, onSave }) {
                                             onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
                                         />
                                     </div>
-                                    {showPlatform && (
-                                        <div className="form-group">
-                                            <label className="form-label">Plataforma</label>
-                                            <input
-                                                type="text"
-                                                className="form-input"
-                                                placeholder="Switch, PC..."
-                                                value={formData.platform}
-                                                onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-                                            />
-                                        </div>
-                                    )}
-                                    {showDuration && (
-                                        <div className="form-group">
-                                            <label className="form-label">Duración (min)</label>
-                                            <input
-                                                type="number"
-                                                className="form-input"
-                                                placeholder="120"
-                                                value={formData.duration_min}
-                                                onChange={(e) => setFormData({ ...formData, duration_min: e.target.value })}
-                                            />
-                                        </div>
-                                    )}
-                                    {showPages && (
-                                        <div className="form-group">
-                                            <label className="form-label">Páginas</label>
-                                            <input
-                                                type="number"
-                                                className="form-input"
-                                                placeholder="350"
-                                                value={formData.pages}
-                                                onChange={(e) => setFormData({ ...formData, pages: e.target.value })}
-                                            />
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-sm">
-                            <div className="form-group">
-                                <label className="form-label">Creador (Director/Autor)</label>
-                                <input
-                                    type="text"
-                                    className="form-input"
-                                    placeholder="Nombre..."
-                                    value={formData.creator}
-                                    onChange={(e) => setFormData({ ...formData, creator: e.target.value })}
-                                />
-                            </div>
-                            {showDev && (
-                                <div className="form-group">
-                                    <label className="form-label">Desarrollador</label>
-                                    <input
-                                        type="text"
-                                        className="form-input"
-                                        value={formData.developer}
-                                        onChange={(e) => setFormData({ ...formData, developer: e.target.value })}
-                                    />
-                                </div>
-                            )}
-                            {showEpisodes && (
-                                <div className="form-group">
-                                    <label className="form-label">Episodios</label>
-                                    <input
-                                        type="number"
-                                        className="form-input"
-                                        value={formData.episodes}
-                                        onChange={(e) => setFormData({ ...formData, episodes: e.target.value })}
-                                    />
-                                </div>
-                            )}
+                        <div className="form-group">
+                            <label className="form-label">Creador (Director/Autor/Desarrollador)</label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                placeholder="Nombre del creador..."
+                                value={formData.creator}
+                                onChange={(e) => setFormData({ ...formData, creator: e.target.value })}
+                            />
                         </div>
 
                         <div className="form-group">
@@ -431,16 +341,10 @@ export default function ItemDetail() {
 
                 <h1>{item.title}</h1>
 
-                <div className="item-meta grid grid-cols-2 gap-x-md gap-y-xs">
-                    {item.year && <span>📅 Año: {item.year}</span>}
-                    {item.creator && <span>👤 Creador: {item.creator}</span>}
-                    {item.genre && <span>🏷️ Género: {item.genre}</span>}
-                    {item.platform && <span>🎮 Plat: {item.platform}</span>}
-                    {item.developer && <span>👨‍💻 Dev: {item.developer}</span>}
-                    {item.publisher && <span>🏢 Pub: {item.publisher}</span>}
-                    {item.duration_min && <span>⏱️ {item.duration_min} min</span>}
-                    {item.pages && <span>📖 {item.pages} págs</span>}
-                    {item.episodes && <span>📺 {item.episodes} eps</span>}
+                <div className="item-meta">
+                    {item.year && <span>📅 {item.year}</span>}
+                    {item.creator && <span>👤 {item.creator}</span>}
+                    {item.genre && <span>🏷️ {item.genre}</span>}
                     {item.avg_rating && (
                         <span className="rating">
                             <span className="rating-star">★</span>

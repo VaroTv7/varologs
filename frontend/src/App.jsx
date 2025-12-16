@@ -1,8 +1,6 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import LoginScreen from './pages/LoginScreen';
-import './index.css';
-import './extra.css';
 import Dashboard from './pages/Dashboard';
 import ItemDetail from './pages/ItemDetail';
 import Lists from './pages/Lists';
@@ -56,7 +54,7 @@ function Header({ onAddItem }) {
                 <nav className="nav">
                     <Link to="/" className={isActive('/')}>Inicio</Link>
                     <Link to="/lists" className={isActive('/lists')}>Listas</Link>
-                    <Link to="/settings" className={isActive('/settings')}>⚙️ Config</Link>
+                    <Link to="/settings" className={isActive('/settings')}>Config</Link>
                 </nav>
 
                 <div className="flex items-center gap-md">

@@ -67,38 +67,19 @@ export default function LoginScreen({ onLogin }) {
                                 <p className="text-secondary mb-md">Selecciona tu usuario:</p>
                                 <div className="user-list">
                                     {users.map(user => (
-                                        <div key={user.id} className="user-option-wrapper applied-user-manager">
-                                            <button
-                                                className="user-option"
-                                                onClick={() => onLogin(user)}
+                                        <button
+                                            key={user.id}
+                                            className="user-option"
+                                            onClick={() => onLogin(user)}
+                                        >
+                                            <div
+                                                className="user-avatar"
+                                                style={{ backgroundColor: user.avatar_color }}
                                             >
-                                                <div
-                                                    className="user-avatar"
-                                                    style={{ backgroundColor: user.avatar_color }}
-                                                >
-                                                    {user.name.charAt(0).toUpperCase()}
-                                                </div>
-                                                <span className="user-option-name">{user.name}</span>
-                                            </button>
-                                            <button
-                                                className="delete-user-btn"
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    const isConfirmed = window.confirm(`¿⚠️ ESTÁS SEGURO?\n\nSe borrará el usuario "${user.name}" y TODAS sus reseñas/listas.\n\nEsta acción no se puede deshacer.`);
-                                                    if (isConfirmed) {
-                                                        api(`/users/${user.id}`, { method: 'DELETE' })
-                                                            .then(() => loadUsers())
-                                                            .catch(err => setError(err.message));
-                                                    }
-                                                }}
-                                                title="Borrar usuario permanentemente"
-                                                style={{ zIndex: 10 }}
-                                            >
-                                                🗑️
-                                            </button>
-                                        </div>
+                                                {user.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <span className="user-option-name">{user.name}</span>
+                                        </button>
                                     ))}
                                 </div>
                                 <div className="text-secondary mb-md">— o —</div>

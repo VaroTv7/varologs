@@ -66,52 +66,12 @@ db.exec(`
     PRIMARY KEY(list_id, item_id)
   );
 
-  -- Indexes
+  -- Create indexes for performance
   CREATE INDEX IF NOT EXISTS idx_items_type ON items(type);
   CREATE INDEX IF NOT EXISTS idx_reviews_item ON reviews(item_id);
   CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
   CREATE INDEX IF NOT EXISTS idx_lists_user ON lists(user_id);
-
-  -- Settings (valid for runtime config)
-  CREATE TABLE IF NOT EXISTS settings (
-    key TEXT PRIMARY KEY,
-    value TEXT
-  );
 `);
-
-// Pre-populate settings from ENV if empty
-const apiKeyCheck = db.prepare("SELECT value FROM settings WHERE key = 'gemini_api_key'").get();
-if (!apiKeyCheck && process.env.GEMINI_API_KEY) {
-  db.prepare("INSERT INTO settings (key, value) VALUES ('gemini_api_key', ?)").run(process.env.GEMINI_API_KEY);
-}
-
-// Migration: Add new fields if they don't exist (Simple check)
-const columns = db.prepare('PRAGMA table_info(items)').all();
-const columnNames = columns.map(c => c.name);
-
-const newColumns = [
-  { name: 'platform', type: 'TEXT' },
-  { name: 'developer', type: 'TEXT' },
-  { name: 'publisher', type: 'TEXT' },
-  { name: 'duration_min', type: 'INTEGER' }, // Movies, episodes
-  { name: 'pages', type: 'INTEGER' }, // Books
-  { name: 'episodes', type: 'INTEGER' }, // Series, anime
-  { name: 'seasons', type: 'INTEGER' }, // Series
-  { name: 'isbn', type: 'TEXT' }, // Books
-  { name: 'metadata', type: 'TEXT' }, // JSON for extras
-  { name: 'status', type: 'TEXT' } // Item status (running, ended, etc)
-];
-
-newColumns.forEach(col => {
-  if (!columnNames.includes(col.name)) {
-    console.log(`Migrating: Adding ${col.name} to items table...`);
-    try {
-      db.exec(`ALTER TABLE items ADD COLUMN ${col.name} ${col.type}`);
-    } catch (err) {
-      console.error(`Error adding column ${col.name}:`, err.message);
-    }
-  }
-});
 
 console.log('Database initialized at:', dbPath);
 

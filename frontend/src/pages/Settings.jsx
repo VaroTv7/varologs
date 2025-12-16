@@ -1,106 +1,128 @@
 import { useState, useEffect } from 'react';
-import { api } from '../App';
+import { useUser, api } from '../App';
 
 export default function Settings() {
-    const [config, setConfig] = useState(null);
+    const { user, login } = useUser();
     const [apiKey, setApiKey] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [status, setStatus] = useState('');
+    const [status, setStatus] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [aiStatus, setAiStatus] = useState(false);
 
     useEffect(() => {
-        loadConfig();
+        checkAiStatus();
     }, []);
 
-    async function loadConfig() {
+    const checkAiStatus = async () => {
         try {
-            const data = await api('/config');
-            setConfig(data);
-        } catch (err) {
-            setStatus('Error cargando configuración');
+            const data = await api('/ai/status');
+            setAiStatus(data.configured);
+        } catch (error) {
+            console.error('Failed to check AI status:', error);
+        }
+    };
+
+    const handleSaveKey = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setStatus(null);
+
+        try {
+            await api('/config/apikey', {
+                method: 'POST',
+                body: { apiKey }
+            });
+            setStatus({ type: 'success', message: 'API Key guardada correctamente' });
+            setApiKey('');
+            checkAiStatus();
+        } catch (error) {
+            setStatus({ type: 'error', message: error.message });
         } finally {
             setLoading(false);
         }
-    }
-
-    async function handleSave(e) {
-        e.preventDefault();
-        setSaving(true);
-        setStatus('');
-
-        try {
-            await api('/config', {
-                method: 'POST',
-                body: { gemini_api_key: apiKey }
-            });
-            setStatus('¡Configuración guardada!');
-            setApiKey('');
-            loadConfig();
-        } catch (err) {
-            setStatus('Error guardando: ' + err.message);
-        } finally {
-            setSaving(false);
-        }
-    }
+    };
 
     return (
-        <div className="container" style={{ maxWidth: 600, margin: '2rem auto' }}>
-            <h1 className="text-xl mb-lg">⚙️ Configuración</h1>
-
+        <div className="container fade-in">
             <div className="card">
-                <div className="card-body">
-                    <h2 className="card-title mb-md">Google Gemini AI</h2>
-                    <p className="text-secondary mb-md">
-                        Configura la API key para permitir el autocompletado de fichas y búsqueda de carátulas.
-                    </p>
+                <h2>⚙️ Configuración</h2>
 
-                    <div className="mb-md p-md" style={{
-                        background: config?.gemini_configured ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                        borderRadius: 'var(--border-radius)',
-                        border: `1px solid ${config?.gemini_configured ? '#10b981' : '#ef4444'}`
-                    }}>
-                        Status: <strong>{config?.gemini_configured ? '✅ ACTIVO' : '❌ INACTIVO'}</strong>
-                        {config?.gemini_key_masked && <div className="text-sm mt-sm">Key actual: {config.gemini_key_masked}</div>}
+                <div className="section">
+                    <h3>🤖 Inteligencia Artificial (Gemini)</h3>
+                    <div className={`status-badge ${aiStatus ? 'success' : 'warning'}`}>
+                        {aiStatus ? '✅ IA Activada y Lista' : '⚠️ IA No Configurada'}
                     </div>
 
-                    <form onSubmit={handleSave}>
+                    <p className="text-secondary">
+                        Introduce tu API Key de Google Gemini para habilitar el auto-completado mágico.
+                        La clave se guarda de forma segura en tu servidor.
+                    </p>
+
+                    <form onSubmit={handleSaveKey} className="settings-form">
                         <div className="form-group">
-                            <label className="form-label">Nueva API Key</label>
+                            <label>Gemini API Key</label>
                             <input
                                 type="password"
-                                className="form-input"
-                                placeholder="sk-..."
                                 value={apiKey}
-                                onChange={e => setApiKey(e.target.value)}
+                                onChange={(e) => setApiKey(e.target.value)}
+                                placeholder="AIzaSy..."
+                                className="input"
                             />
                         </div>
-
-                        <div className="flex gap-sm">
-                            <button
-                                type="submit"
-                                className="btn btn-primary"
-                                disabled={saving || !apiKey}
-                            >
-                                {saving ? 'Guardando...' : '💾 Guardar Key'}
-                            </button>
-                            <a
-                                href="https://aistudio.google.com/app/apikey"
-                                target="_blank"
-                                rel="noreferrer"
-                                className="btn btn-secondary"
-                            >
-                                Obtener Key ↗
-                            </a>
-                        </div>
+                        <button type="submit" className="btn btn-primary" disabled={loading || !apiKey}>
+                            {loading ? 'Guardando...' : 'Guardar Key'}
+                        </button>
                     </form>
 
                     {status && (
-                        <p className="mt-md p-sm bg-tertiary rounded text-center">
-                            {status}
-                        </p>
+                        <div className={`alert ${status.type}`}>
+                            {status.message}
+                        </div>
                     )}
                 </div>
+
+                <div className="section">
+                    <h3>👤 Usuario</h3>
+                    <p>Sesión actual: <strong>{user?.name}</strong></p>
+                    <div
+                        className="user-avatar-large"
+                        style={{ backgroundColor: user?.avatar_color }}
+                    >
+                        {user?.name?.charAt(0).toUpperCase()}
+                    </div>
+                </div>
             </div>
+
+            <style>{`
+                .section {
+                    margin-bottom: 2rem;
+                    padding-bottom: 2rem;
+                    border-bottom: 1px solid var(--border);
+                }
+                .section:last-child {
+                    border-bottom: none;
+                }
+                .status-badge {
+                    display: inline-block;
+                    padding: 0.5rem 1rem;
+                    border-radius: 99px;
+                    font-weight: bold;
+                    margin-bottom: 1rem;
+                    background: rgba(255,255,255,0.05);
+                }
+                .status-badge.success { color: var(--success); background: rgba(34, 197, 94, 0.1); }
+                .status-badge.warning { color: var(--warning); background: rgba(234, 179, 8, 0.1); }
+                .user-avatar-large {
+                    width: 64px;
+                    height: 64px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 2rem;
+                    font-weight: bold;
+                    margin-top: 1rem;
+                }
+            `}</style>
         </div>
     );
 }

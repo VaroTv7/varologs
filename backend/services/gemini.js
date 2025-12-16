@@ -1,49 +1,20 @@
 import { GoogleGenAI } from '@google/genai';
 
-import { GoogleGenAI } from '@google/genai';
-import db from '../database.js'; // Import DB to read key
+let geminiApiKey = process.env.GEMINI_API_KEY;
+let aiClient = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 
-let ai = null;
-
-// Initialize from DB or ENV
-function initAI() {
-    try {
-        let key = process.env.GEMINI_API_KEY;
-        // Try DB override
-        try {
-            const row = db.prepare("SELECT value FROM settings WHERE key = 'gemini_api_key'").get();
-            if (row && row.value) key = row.value;
-        } catch (e) {
-            // DB might not be ready during tests/init
-        }
-
-        if (key) {
-            ai = new GoogleGenAI({ apiKey: key });
-            console.log('Gemini AI initialized with key');
-        }
-    } catch (err) {
-        console.error('Failed to init AI:', err);
-    }
+// Update the API key dynamically
+export function setApiKey(key) {
+    geminiApiKey = key;
+    aiClient = new GoogleGenAI({ apiKey: key });
+    console.log('Gemini API Key updated');
 }
 
-// Runtime reconfiguration
-export function configureAI(key) {
-    if (key) {
-        ai = new GoogleGenAI({ apiKey: key });
-        console.log('Gemini AI re-configured');
-    } else {
-        ai = null;
-    }
-}
-
-// Initial load
-initAI();
-
-// Model cascade: try newer models first, fallback to older ones
+// Model cascade: try newer/better models first
 const MODELS = [
-    'gemini-2.5-flash',
     'gemini-2.0-flash',
-    'gemini-1.5-flash'
+    'gemini-1.5-flash',
+    'gemini-1.5-pro'
 ];
 
 const TYPE_TRANSLATIONS = {
@@ -59,88 +30,78 @@ const TYPE_TRANSLATIONS = {
 
 /**
  * Auto-complete media metadata using Gemini AI
- * Falls back through model cascade on failure
  */
 export async function autocompleteMedia(query, type) {
-    if (!ai) {
+    if (!aiClient) {
         throw new Error('Gemini API key not configured');
     }
 
     const typeEs = TYPE_TRANSLATIONS[type] || type;
-    const prompt = `Busca información sobre "${query}" que es un/una ${typeEs}.
-
-Responde ÚNICAMENTE con un objeto JSON válido (sin markdown, sin \`\`\`), con esta estructura exacta:
+    const prompt = `Busca información precisa sobre "${query}" (tipo: ${typeEs}).
+    
+Responde SOLO con un JSON válido con esta estructura:
 {
-  "title": "título oficial exacto",
+  "title": "título oficial completo",
   "year": 2024,
-  "creator": "director/desarrollador/autor/artista principal",
+  "creator": "autor/director/desarrollador principal",
   "genre": "género principal",
-  "synopsis": "sinopsis breve en español, máximo 3 frases",
-  "platform": "plataformas principales (solo si es juego)",
-  "developer": "estudio desarrollador (solo si es juego)",
-  "publisher": "editora/distribuidora",
-  "duration_min": 0, // minutos (pelis) o media por episodio
-  "pages": 0, // solo libros
-  "episodes": 0, // series/anime
-  "seasons": 0, // series
-  "isbn": "ISBN-13 (solo libros)"
+  "synopsis": "sinopsis breve en español (máx 30 palabras)"
 }
-
-Si no encuentras información exacta, usa null en los campos desconocidos.`;
+Si no encuentras el ítem exacto, devuelve null.`;
 
     let lastError = null;
 
     for (const model of MODELS) {
         try {
-            console.log(`Trying model: ${model}`);
+            console.log(`Trying AI model: ${model}`);
 
-            const response = await ai.models.generateContent({
-                model,
+            // Note: @google/genai SDK usage may vary, sticking to standard generateContent
+            const response = await aiClient.models.generateContent({
+                model: model,
                 contents: prompt,
                 config: {
-                    temperature: 0.3,
-                    maxOutputTokens: 500
+                    temperature: 0.1,
                 }
             });
 
-            const text = response.text.trim();
-            // Clean potential markdown code blocks
-            const jsonStr = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '').trim();
+            const text = response.text ? response.text() : (response.response ? response.response.text() : '');
 
+            if (!text) throw new Error('Empty response from AI');
+
+            const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
             const data = JSON.parse(jsonStr);
+
             console.log(`Success with ${model}`);
             return data;
+
         } catch (error) {
-            console.log(`Model ${model} failed:`, error.message);
+            console.warn(`Model ${model} failed: ${error.message}`);
+
+            // If quota exceeded, we definitely want to try the next model (often lower tier)
+            if (error.message.includes('429') || error.message.includes('quota')) {
+                continue;
+            }
             lastError = error;
         }
     }
 
-    throw new Error(`All AI models failed. Last error: ${lastError?.message}`);
+    throw new Error(`AI Autocomplete failed: ${lastError?.message || 'Unknown error'}`);
 }
 
-/**
- * Generate a cover image search query
- */
 export async function suggestCoverSearch(title, type, year) {
-    if (!ai) {
-        return `${title} ${year || ''} ${type} cover`;
-    }
+    if (!aiClient) return `${title} ${type} cover`;
 
     try {
-        const response = await ai.models.generateContent({
-            model: MODELS[0],
-            contents: `Para buscar la portada/carátula de "${title}" (${type}, ${year || 'año desconocido'}), 
-      sugiere el mejor término de búsqueda en inglés. Responde SOLO con el término, sin explicaciones.`,
-            config: { temperature: 0.1, maxOutputTokens: 50 }
+        const response = await aiClient.models.generateContent({
+            model: 'gemini-1.5-flash', // Use cheaper model for this
+            contents: `Search query for cover image of: ${title} (${type}, ${year}). Return ONLY the query string (e.g. "Zelda Ocarina of Time cover").`,
         });
-
-        return response.text.trim();
-    } catch {
-        return `${title} ${year || ''} ${type} cover`;
+        return response.text().trim();
+    } catch (e) {
+        return `${title} ${type} cover`;
     }
 }
 
 export function isAIConfigured() {
-    return !!ai;
+    return !!aiClient;
 }

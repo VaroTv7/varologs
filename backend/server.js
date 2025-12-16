@@ -5,7 +5,7 @@ import { dirname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 
 import db from './database.js';
-import { autocompleteMedia, isAIConfigured } from './services/gemini.js';
+import { autocompleteMedia, isAIConfigured, setApiKey } from './services/gemini.js';
 import { findCoverUrl, getPlaceholderCover } from './services/covers.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -29,41 +29,6 @@ const frontendPath = join(__dirname, '..', 'frontend', 'dist');
 if (existsSync(frontendPath)) {
     app.use(express.static(frontendPath));
 }
-
-// ============== CONFIG ==============
-
-// Get config (safe)
-app.get('/api/config', (req, res) => {
-    try {
-        const apiKey = db.prepare("SELECT value FROM settings WHERE key = 'gemini_api_key'").get()?.value;
-        res.json({
-            gemini_configured: !!apiKey,
-            // Mask key for security
-            gemini_key_masked: apiKey ? `...${apiKey.slice(-5)}` : null
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Update config
-app.post('/api/config', (req, res) => {
-    try {
-        const { gemini_api_key } = req.body;
-
-        if (gemini_api_key !== undefined) {
-            db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('gemini_api_key', ?)").run(gemini_api_key);
-            // Re-configure AI service immediately
-            import('./services/gemini.js').then(({ configureAI }) => {
-                configureAI(gemini_api_key);
-            });
-        }
-
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
 
 // ============== USERS ==============
 
@@ -186,28 +151,18 @@ app.get('/api/items/:id', (req, res) => {
 // Create item
 app.post('/api/items', (req, res) => {
     try {
-        const {
-            type, title, year, creator, genre, synopsis, cover_url, created_by,
-            platform, developer, publisher, duration_min, pages, episodes, seasons, isbn, metadata, status
-        } = req.body;
+        const { type, title, year, creator, genre, synopsis, cover_url, created_by } = req.body;
 
         if (!type || !title) {
             return res.status(400).json({ error: 'Type and title are required' });
         }
 
         const stmt = db.prepare(`
-        INSERT INTO items (
-            type, title, year, creator, genre, synopsis, cover_url, created_by,
-            platform, developer, publisher, duration_min, pages, episodes, seasons, isbn, metadata, status
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
+      INSERT INTO items (type, title, year, creator, genre, synopsis, cover_url, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
 
-        const result = stmt.run(
-            type, title.trim(), year, creator, genre, synopsis, cover_url, created_by,
-            platform, developer, publisher, duration_min, pages, episodes, seasons, isbn,
-            metadata ? JSON.stringify(metadata) : null, status
-        );
+        const result = stmt.run(type, title.trim(), year, creator, genre, synopsis, cover_url, created_by);
         const item = db.prepare('SELECT * FROM items WHERE id = ?').get(result.lastInsertRowid);
 
         res.status(201).json(item);
@@ -225,28 +180,16 @@ app.post('/api/items', (req, res) => {
 });
 
 // Update item
-// Update item
 app.put('/api/items/:id', (req, res) => {
     try {
-        const {
-            title, year, creator, genre, synopsis, cover_url,
-            platform, developer, publisher, duration_min, pages, episodes, seasons, isbn, metadata, status
-        } = req.body;
+        const { title, year, creator, genre, synopsis, cover_url } = req.body;
 
         const stmt = db.prepare(`
-        UPDATE items SET 
-            title = ?, year = ?, creator = ?, genre = ?, synopsis = ?, cover_url = ?,
-            platform = ?, developer = ?, publisher = ?, duration_min = ?, pages = ?, 
-            episodes = ?, seasons = ?, isbn = ?, metadata = ?, status = ?
-        WHERE id = ?
-        `);
+      UPDATE items SET title = ?, year = ?, creator = ?, genre = ?, synopsis = ?, cover_url = ?
+      WHERE id = ?
+    `);
 
-        const result = stmt.run(
-            title, year, creator, genre, synopsis, cover_url,
-            platform, developer, publisher, duration_min, pages, episodes, seasons, isbn,
-            metadata ? JSON.stringify(metadata) : null, status,
-            req.params.id
-        );
+        const result = stmt.run(title, year, creator, genre, synopsis, cover_url, req.params.id);
 
         if (result.changes === 0) {
             return res.status(404).json({ error: 'Item not found' });
