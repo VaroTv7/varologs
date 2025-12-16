@@ -27,7 +27,8 @@ export default function AddItemModal({ onClose, onSuccess }) {
         creator: '',
         genre: '',
         synopsis: '',
-        cover_url: ''
+        cover_url: '',
+        metadata: {}
     });
 
     async function handleAIAutocomplete(e) {
@@ -50,7 +51,8 @@ export default function AddItemModal({ onClose, onSuccess }) {
                 creator: aiData.creator || '',
                 genre: aiData.genre || '',
                 synopsis: aiData.synopsis || '',
-                cover_url: ''
+                cover_url: '',
+                metadata: aiData.metadata || {}
             });
 
             // Try to get cover
@@ -91,6 +93,7 @@ export default function AddItemModal({ onClose, onSuccess }) {
                     genre: formData.genre.trim() || null,
                     synopsis: formData.synopsis.trim() || null,
                     cover_url: formData.cover_url.trim() || null,
+                    metadata: formData.metadata || null,
                     created_by: user.id
                 }
             });
@@ -256,6 +259,78 @@ export default function AddItemModal({ onClose, onSuccess }) {
                                     onChange={(e) => setFormData({ ...formData, creator: e.target.value })}
                                 />
                             </div>
+
+                            {/* Dynamic Metadata Fields */}
+                            {(type === 'movie' || type === 'series') && (
+                                <div className="flex gap-sm">
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label className="form-label">Duración</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            placeholder="Ej: 120 min"
+                                            value={formData.metadata?.duration || ''}
+                                            onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, duration: e.target.value } })}
+                                        />
+                                    </div>
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label className="form-label">Estudio/Prod.</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            value={formData.metadata?.production || ''}
+                                            onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, production: e.target.value } })}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {type === 'game' && (
+                                <div className="flex gap-sm">
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label className="form-label">Desarrollador</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            value={formData.metadata?.developer || ''}
+                                            onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, developer: e.target.value } })}
+                                        />
+                                    </div>
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label className="form-label">Plataformas</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            placeholder="PC, PS5, Switch"
+                                            value={Array.isArray(formData.metadata?.platforms) ? formData.metadata.platforms.join(', ') : (formData.metadata?.platforms || '')}
+                                            onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, platforms: e.target.value.split(',').map(s => s.trim()) } })}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {(type === 'book' || type === 'manga') && (
+                                <div className="flex gap-sm">
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label className="form-label">Páginas</label>
+                                        <input
+                                            type="number"
+                                            className="form-input"
+                                            value={formData.metadata?.pages || ''}
+                                            onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, pages: e.target.value } })}
+                                        />
+                                    </div>
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label className="form-label">ISBN</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            value={formData.metadata?.isbn || ''}
+                                            onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, isbn: e.target.value } })}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="form-group">
                                 <label className="form-label">Sinopsis</label>

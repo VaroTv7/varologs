@@ -345,6 +345,15 @@ export default function ItemDetail() {
                     {item.year && <span>📅 {item.year}</span>}
                     {item.creator && <span>👤 {item.creator}</span>}
                     {item.genre && <span>🏷️ {item.genre}</span>}
+
+                    {/* Dynamic Metadata */}
+                    {item.metadata?.duration && <span>⏱️ {item.metadata.duration}</span>}
+                    {item.metadata?.production && <span>🏢 {item.metadata.production}</span>}
+                    {item.metadata?.rating && <span>⭐ IMDb {item.metadata.rating}</span>}
+                    {item.metadata?.developer && <span>👨‍💻 {item.metadata.developer}</span>}
+                    {item.metadata?.platforms && <span>🎮 {Array.isArray(item.metadata.platforms) ? item.metadata.platforms.join(', ') : item.metadata.platforms}</span>}
+                    {item.metadata?.pages && <span>📖 {item.metadata.pages} págs</span>}
+                    {item.metadata?.artist && <span>🎤 {item.metadata.artist}</span>}
                     {item.avg_rating && (
                         <span className="rating">
                             <span className="rating-star">★</span>

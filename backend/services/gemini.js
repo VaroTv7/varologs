@@ -45,7 +45,14 @@ Responde SOLO con un JSON válido con esta estructura:
   "year": 2024,
   "creator": "autor/director/desarrollador principal",
   "genre": "género principal",
-  "synopsis": "sinopsis breve en español (máx 30 palabras)"
+  "synopsis": "sinopsis breve en español (máx 50 palabras)",
+  "metadata": {
+      // SOLO rellena los campos que correspondan al tipo:
+      // Cine/TV: "duration" (minutos/temporadas), "cast" (array top 3), "production" (estudio), "rating" (0-10 IMDb)
+      // Videojuegos: "developer", "publisher", "platforms" (array), "hltb_time" (horas historia principal)
+      // Libros/Manga: "pages" (nº), "isbn", "publisher"
+      // Música: "artist", "length" (mm:ss), "label"
+  }
 }
 Si no encuentras el ítem exacto, devuelve null.`;
 

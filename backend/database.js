@@ -31,10 +31,18 @@ db.exec(`
     genre TEXT,
     synopsis TEXT,
     cover_url TEXT,
+    metadata TEXT, -- JSON string for extra fields (duration, platform, etc)
     created_by INTEGER REFERENCES users(id),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(type, title, year)
   );
+
+  -- Migration for existing databases
+  try {
+    db.prepare('ALTER TABLE items ADD COLUMN metadata TEXT').run();
+  } catch (e) {
+    // Column likely exists, ignore
+  }
 
   -- User reviews per item
   CREATE TABLE IF NOT EXISTS reviews (

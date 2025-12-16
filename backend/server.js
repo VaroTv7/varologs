@@ -145,7 +145,10 @@ app.get('/api/items', (req, res) => {
         query += ' ORDER BY i.created_at DESC LIMIT ? OFFSET ?';
         params.push(parseInt(limit), parseInt(offset));
 
-        const items = db.prepare(query).all(...params);
+        const items = db.prepare(query).all(...params).map(item => ({
+            ...item,
+            metadata: item.metadata ? JSON.parse(item.metadata) : null
+        }));
         res.json(items);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -160,6 +163,10 @@ app.get('/api/items/:id', (req, res) => {
         (SELECT AVG(rating) FROM reviews WHERE item_id = i.id AND rating IS NOT NULL) as avg_rating
       FROM items i WHERE i.id = ?
     `).get(req.params.id);
+
+        if (item) {
+            item.metadata = item.metadata ? JSON.parse(item.metadata) : null;
+        }
 
         if (!item) {
             return res.status(404).json({ error: 'Item not found' });
@@ -182,18 +189,18 @@ app.get('/api/items/:id', (req, res) => {
 // Create item
 app.post('/api/items', (req, res) => {
     try {
-        const { type, title, year, creator, genre, synopsis, cover_url, created_by } = req.body;
+        const { type, title, year, creator, genre, synopsis, cover_url, metadata, created_by } = req.body;
 
         if (!type || !title) {
             return res.status(400).json({ error: 'Type and title are required' });
         }
 
         const stmt = db.prepare(`
-      INSERT INTO items (type, title, year, creator, genre, synopsis, cover_url, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO items (type, title, year, creator, genre, synopsis, cover_url, metadata, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-        const result = stmt.run(type, title.trim(), year, creator, genre, synopsis, cover_url, created_by);
+        const result = stmt.run(type, title.trim(), year, creator, genre, synopsis, cover_url, metadata ? JSON.stringify(metadata) : null, created_by);
         const item = db.prepare('SELECT * FROM items WHERE id = ?').get(result.lastInsertRowid);
 
         res.status(201).json(item);
@@ -213,14 +220,14 @@ app.post('/api/items', (req, res) => {
 // Update item
 app.put('/api/items/:id', (req, res) => {
     try {
-        const { title, year, creator, genre, synopsis, cover_url } = req.body;
+        const { title, year, creator, genre, synopsis, cover_url, metadata } = req.body;
 
         const stmt = db.prepare(`
-      UPDATE items SET title = ?, year = ?, creator = ?, genre = ?, synopsis = ?, cover_url = ?
+      UPDATE items SET title = ?, year = ?, creator = ?, genre = ?, synopsis = ?, cover_url = ?, metadata = ?
       WHERE id = ?
     `);
 
-        const result = stmt.run(title, year, creator, genre, synopsis, cover_url, req.params.id);
+        const result = stmt.run(title, year, creator, genre, synopsis, cover_url, metadata ? JSON.stringify(metadata) : null, req.params.id);
 
         if (result.changes === 0) {
             return res.status(404).json({ error: 'Item not found' });
