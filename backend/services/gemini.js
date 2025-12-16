@@ -1,13 +1,27 @@
 import { GoogleGenAI } from '@google/genai';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const ai = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
+let ai = null;
 
-// Model cascade: try newer models first, fallback to older ones
+export function initializeAI(apiKey) {
+    if (apiKey) {
+        ai = new GoogleGenAI({ apiKey });
+        process.env.GEMINI_API_KEY = apiKey; // Update env for consistency
+    }
+}
+
+// Initialize on load if env var exists
+if (process.env.GEMINI_API_KEY) {
+    initializeAI(process.env.GEMINI_API_KEY);
+}
+
+// Model cascade: try newer/better models first, fallback to efficient ones
 const MODELS = [
-    'gemini-2.0-flash',
-    'gemini-1.5-pro',
-    'gemini-1.5-flash'
+    'gemini-2.0-flash-exp', // Try experimental 2.0
+    'gemini-2.0-flash',     // Standard 2.0
+    'gemini-1.5-pro',       // High quality 1.5
+    'gemini-1.5-pro-latest',
+    'gemini-1.5-flash',     // Fast/Cheap
+    'gemini-1.5-flash-latest'
 ];
 
 const TYPE_TRANSLATIONS = {
@@ -67,8 +81,7 @@ Si no encuentras información exacta, usa null en los campos desconocidos.`;
             console.log(`Success with ${model}`);
             return data;
         } catch (error) {
-            console.error(`Model ${model} failed with query "${query}":`, error.message);
-            if (error.response) console.error('Error details:', JSON.stringify(error.response, null, 2));
+            console.log(`Model ${model} failed:`, error.message);
             lastError = error;
         }
     }

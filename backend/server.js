@@ -5,7 +5,7 @@ import { dirname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 
 import db from './database.js';
-import { autocompleteMedia, isAIConfigured } from './services/gemini.js';
+import { autocompleteMedia, isAIConfigured, initializeAI } from './services/gemini.js';
 import { findCoverUrl, getPlaceholderCover } from './services/covers.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -456,6 +456,21 @@ app.get('/api/ai/cover', async (req, res) => {
 // AI status
 app.get('/api/ai/status', (req, res) => {
     res.json({ configured: isAIConfigured() });
+});
+
+// Configure AI
+app.post('/api/config/apikey', (req, res) => {
+    try {
+        const { apiKey } = req.body;
+        if (!apiKey || apiKey.trim().length === 0) {
+            return res.status(400).json({ error: 'API Key is required' });
+        }
+
+        initializeAI(apiKey.trim());
+        res.json({ success: true, status: 'configured' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // ============== STATS ==============

@@ -4,6 +4,7 @@ import LoginScreen from './pages/LoginScreen';
 import Dashboard from './pages/Dashboard';
 import ItemDetail from './pages/ItemDetail';
 import Lists from './pages/Lists';
+import Settings from './pages/Settings';
 import AddItemModal from './components/AddItemModal';
 
 // User Context
@@ -53,6 +54,7 @@ function Header({ onAddItem }) {
                 <nav className="nav">
                     <Link to="/" className={isActive('/')}>Inicio</Link>
                     <Link to="/lists" className={isActive('/lists')}>Listas</Link>
+                    <Link to="/settings" className={isActive('/settings')}>Config</Link>
                 </nav>
 
                 <div className="flex items-center gap-md">
@@ -95,6 +97,7 @@ function AppContent() {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/item/:id" element={<ItemDetail />} />
                     <Route path="/lists" element={<Lists />} />
+                    <Route path="/settings" element={<Settings />} />
                 </Routes>
             </main>
 
