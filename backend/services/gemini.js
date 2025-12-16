@@ -14,11 +14,10 @@ if (process.env.GEMINI_API_KEY) {
     initializeAI(process.env.GEMINI_API_KEY);
 }
 
-// Model cascade: strictly use Flash models as requested (interpreting "2.5" as 1.5/2.0 availability)
+// Model cascade: STRICTLY Gemini 2.5 Flash as requested by user
+// Validated availability for 2025
 const MODELS = [
-    'gemini-1.5-flash',     // Most stable free tier
-    'gemini-2.0-flash-exp', // Experimental new flash
-    'gemini-2.0-flash'      // Standard 2.0
+    'gemini-2.5-flash'
 ];
 
 const TYPE_TRANSLATIONS = {
