@@ -30,6 +30,41 @@ if (existsSync(frontendPath)) {
     app.use(express.static(frontendPath));
 }
 
+// ============== CONFIG ==============
+
+// Get config (safe)
+app.get('/api/config', (req, res) => {
+    try {
+        const apiKey = db.prepare("SELECT value FROM settings WHERE key = 'gemini_api_key'").get()?.value;
+        res.json({
+            gemini_configured: !!apiKey,
+            // Mask key for security
+            gemini_key_masked: apiKey ? `...${apiKey.slice(-5)}` : null
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update config
+app.post('/api/config', (req, res) => {
+    try {
+        const { gemini_api_key } = req.body;
+
+        if (gemini_api_key !== undefined) {
+            db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('gemini_api_key', ?)").run(gemini_api_key);
+            // Re-configure AI service immediately
+            import('./services/gemini.js').then(({ configureAI }) => {
+                configureAI(gemini_api_key);
+            });
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ============== USERS ==============
 
 // Get all users

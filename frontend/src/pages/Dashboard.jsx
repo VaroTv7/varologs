@@ -43,9 +43,25 @@ function MediaCard({ item }) {
             <div className="card-body">
                 <h3 className="card-title">{item.title}</h3>
                 <div className="card-meta">
-                    <span>{item.year || 'Sin año'}</span>
+                    <div className="flex items-center justify-between w-full">
+                        <span>
+                            {item.platform ? (
+                                <span className="badge badge-sm">{item.platform}</span>
+                            ) : (
+                                <span>{item.year || 'Sin año'}</span>
+                            )}
+                        </span>
+
+                        {/* Status Icon */}
+                        {item.status && item.status !== 'pending' && (
+                            <span title={STATUS_LABELS[item.status]?.replace(/ .*/, '')}>
+                                {STATUS_LABELS[item.status]?.split(' ')[0]}
+                            </span>
+                        )}
+                    </div>
+
                     {item.avg_rating && (
-                        <span className="rating">
+                        <span className="rating" style={{ marginTop: '0.25rem' }}>
                             <span className="rating-star">★</span>
                             <span>{Number(item.avg_rating).toFixed(1)}</span>
                         </span>

@@ -71,7 +71,19 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_reviews_item ON reviews(item_id);
   CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
   CREATE INDEX IF NOT EXISTS idx_lists_user ON lists(user_id);
+
+  -- Settings (valid for runtime config)
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );
 `);
+
+// Pre-populate settings from ENV if empty
+const apiKeyCheck = db.prepare("SELECT value FROM settings WHERE key = 'gemini_api_key'").get();
+if (!apiKeyCheck && process.env.GEMINI_API_KEY) {
+  db.prepare("INSERT INTO settings (key, value) VALUES ('gemini_api_key', ?)").run(process.env.GEMINI_API_KEY);
+}
 
 // Migration: Add new fields if they don't exist (Simple check)
 const columns = db.prepare('PRAGMA table_info(items)').all();

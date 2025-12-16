@@ -1,7 +1,43 @@
 import { GoogleGenAI } from '@google/genai';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const ai = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
+import { GoogleGenAI } from '@google/genai';
+import db from '../database.js'; // Import DB to read key
+
+let ai = null;
+
+// Initialize from DB or ENV
+function initAI() {
+    try {
+        let key = process.env.GEMINI_API_KEY;
+        // Try DB override
+        try {
+            const row = db.prepare("SELECT value FROM settings WHERE key = 'gemini_api_key'").get();
+            if (row && row.value) key = row.value;
+        } catch (e) {
+            // DB might not be ready during tests/init
+        }
+
+        if (key) {
+            ai = new GoogleGenAI({ apiKey: key });
+            console.log('Gemini AI initialized with key');
+        }
+    } catch (err) {
+        console.error('Failed to init AI:', err);
+    }
+}
+
+// Runtime reconfiguration
+export function configureAI(key) {
+    if (key) {
+        ai = new GoogleGenAI({ apiKey: key });
+        console.log('Gemini AI re-configured');
+    } else {
+        ai = null;
+    }
+}
+
+// Initial load
+initAI();
 
 // Model cascade: try newer models first, fallback to older ones
 const MODELS = [

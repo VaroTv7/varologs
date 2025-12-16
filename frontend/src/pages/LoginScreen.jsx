@@ -82,15 +82,21 @@ export default function LoginScreen({ onLogin }) {
                                             </button>
                                             <button
                                                 className="delete-user-btn"
+                                                type="button"
                                                 onClick={(e) => {
+                                                    e.preventDefault();
                                                     e.stopPropagation();
-                                                    if (confirm(`¿Borrar usuario ${user.name} y todas sus reseñas?`)) {
-                                                        api(`/users/${user.id}`, { method: 'DELETE' }).then(() => loadUsers());
+                                                    const isConfirmed = window.confirm(`¿⚠️ ESTÁS SEGURO?\n\nSe borrará el usuario "${user.name}" y TODAS sus reseñas/listas.\n\nEsta acción no se puede deshacer.`);
+                                                    if (isConfirmed) {
+                                                        api(`/users/${user.id}`, { method: 'DELETE' })
+                                                            .then(() => loadUsers())
+                                                            .catch(err => setError(err.message));
                                                     }
                                                 }}
-                                                title="Borrar usuario"
+                                                title="Borrar usuario permanentemente"
+                                                style={{ zIndex: 10 }}
                                             >
-                                                ×
+                                                🗑️
                                             </button>
                                         </div>
                                     ))}
