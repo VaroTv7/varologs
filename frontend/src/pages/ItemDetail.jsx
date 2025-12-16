@@ -15,182 +15,233 @@ const MEDIA_TYPES = {
 
 const STATUS_OPTIONS = [
     { value: 'pending', label: '📋 Pendiente' },
-    { value: 'in_progress', label: '▶️ En progreso' },
-    { value: 'completed', label: '✅ Completado' },
-    { value: 'abandoned', label: '❌ Abandonado' }
-];
 
-// Edit Modal Component
-function EditItemModal({ item, onClose, onSave }) {
-    const [formData, setFormData] = useState({
-        title: item.title || '',
-        year: item.year || '',
-        creator: item.creator || '',
-        genre: item.genre || '',
-        synopsis: item.synopsis || '',
-        cover_url: item.cover_url || ''
-    });
-    const [saving, setSaving] = useState(false);
-
-    async function handleSubmit(e) {
-        e.preventDefault();
-        if (!formData.title.trim()) return;
-
-        setSaving(true);
-        try {
-            await api(`/items/${item.id}`, {
-                method: 'PUT',
-                body: {
-                    title: formData.title.trim(),
-                    year: formData.year ? parseInt(formData.year) : null,
-                    creator: formData.creator.trim() || null,
-                    genre: formData.genre.trim() || null,
-                    synopsis: formData.synopsis.trim() || null,
-                    cover_url: formData.cover_url.trim() || null
-                }
-            });
-            onSave();
-        } catch (err) {
-            console.error('Error updating item:', err);
-        } finally {
-            setSaving(false);
+    setSaving(true);
+try {
+    await api(`/items/${item.id}`, {
+        method: 'PUT',
+        body: {
+            ...formData,
+            year: formData.year ? parseInt(formData.year) : null,
+            duration_min: formData.duration_min ? parseInt(formData.duration_min) : null,
+            pages: formData.pages ? parseInt(formData.pages) : null,
+            episodes: formData.episodes ? parseInt(formData.episodes) : null,
+            seasons: formData.seasons ? parseInt(formData.seasons) : null,
+            // Clean strings
+            title: formData.title.trim(),
+            creator: formData.creator.trim() || null,
+            genre: formData.genre.trim() || null,
+            synopsis: formData.synopsis.trim() || null,
+            cover_url: formData.cover_url.trim() || null,
+            platform: formData.platform.trim() || null,
+            developer: formData.developer.trim() || null,
+            publisher: formData.publisher.trim() || null,
+            isbn: formData.isbn.trim() || null,
+            status: formData.status.trim() || null
         }
-    }
+    });
+    onSave();
+} catch (err) {
+    console.error('Error updating item:', err);
+} finally {
+    setSaving(false);
+}
+}
 
-    const typeInfo = MEDIA_TYPES[item.type] || { label: item.type, icon: '📋' };
+const typeInfo = MEDIA_TYPES[item.type] || { label: item.type, icon: '📋' };
 
-    return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h2 className="modal-title">✏️ Editar {typeInfo.label}</h2>
-                    <button className="modal-close" onClick={onClose}>×</button>
-                </div>
+return (
+    <div className="modal-overlay" onClick={onClose}>
+        <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+                <h2 className="modal-title">✏️ Editar {typeInfo.label}</h2>
+                <button className="modal-close" onClick={onClose}>×</button>
+            </div>
 
-                <form onSubmit={handleSubmit}>
-                    <div className="modal-body">
-                        <div className="flex gap-md mb-lg">
-                            {/* Cover Preview */}
-                            <div style={{
-                                width: 120,
-                                flexShrink: 0,
-                                aspectRatio: '2/3',
-                                background: 'var(--bg-tertiary)',
-                                borderRadius: 'var(--border-radius)',
-                                overflow: 'hidden'
-                            }}>
-                                {formData.cover_url ? (
-                                    <img
-                                        src={formData.cover_url}
-                                        alt="Cover"
-                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                        onError={(e) => e.target.style.display = 'none'}
-                                    />
-                                ) : (
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        height: '100%',
-                                        fontSize: '2rem',
-                                        opacity: 0.3
-                                    }}>
-                                        {typeInfo.icon}
-                                    </div>
-                                )}
+            <form onSubmit={handleSubmit}>
+                <div className="modal-body">
+                    <div className="flex gap-md mb-lg">
+                        {/* Cover Preview */}
+                        <div style={{
+                            width: 120,
+                            flexShrink: 0,
+                            aspectRatio: '2/3',
+                            background: 'var(--bg-tertiary)',
+                            borderRadius: 'var(--border-radius)',
+                            overflow: 'hidden'
+                        }}>
+                            {formData.cover_url ? (
+                                <img
+                                    src={formData.cover_url}
+                                    alt="Cover"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={(e) => e.target.style.display = 'none'}
+                                />
+                            ) : (
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    height: '100%',
+                                    fontSize: '2rem',
+                                    opacity: 0.3
+                                }}>
+                                    {typeInfo.icon}
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ flex: 1 }}>
+                            <div className="form-group">
+                                <label className="form-label">Título *</label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={formData.title}
+                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                    required
+                                />
                             </div>
 
-                            <div style={{ flex: 1 }}>
+                            <div className="grid grid-cols-2 gap-sm">
                                 <div className="form-group">
-                                    <label className="form-label">Título *</label>
+                                    <label className="form-label">Año</label>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        placeholder="2024"
+                                        min="1900"
+                                        max="2030"
+                                        value={formData.year}
+                                        onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Género</label>
                                     <input
                                         type="text"
                                         className="form-input"
-                                        value={formData.title}
-                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                        required
+                                        placeholder="Acción"
+                                        value={formData.genre}
+                                        onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
                                     />
                                 </div>
-
-                                <div className="flex gap-sm">
-                                    <div className="form-group" style={{ flex: 1 }}>
-                                        <label className="form-label">Año</label>
-                                        <input
-                                            type="number"
-                                            className="form-input"
-                                            placeholder="2024"
-                                            min="1900"
-                                            max="2030"
-                                            value={formData.year}
-                                            onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="form-group" style={{ flex: 1 }}>
-                                        <label className="form-label">Género</label>
+                                {showPlatform && (
+                                    <div className="form-group">
+                                        <label className="form-label">Plataforma</label>
                                         <input
                                             type="text"
                                             className="form-input"
-                                            placeholder="Acción"
-                                            value={formData.genre}
-                                            onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+                                            placeholder="Switch, PC..."
+                                            value={formData.platform}
+                                            onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
                                         />
                                     </div>
-                                </div>
+                                )}
+                                {showDuration && (
+                                    <div className="form-group">
+                                        <label className="form-label">Duración (min)</label>
+                                        <input
+                                            type="number"
+                                            className="form-input"
+                                            placeholder="120"
+                                            value={formData.duration_min}
+                                            onChange={(e) => setFormData({ ...formData, duration_min: e.target.value })}
+                                        />
+                                    </div>
+                                )}
+                                {showPages && (
+                                    <div className="form-group">
+                                        <label className="form-label">Páginas</label>
+                                        <input
+                                            type="number"
+                                            className="form-input"
+                                            placeholder="350"
+                                            value={formData.pages}
+                                            onChange={(e) => setFormData({ ...formData, pages: e.target.value })}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
+                    </div>
 
+                    <div className="grid grid-cols-2 gap-sm">
                         <div className="form-group">
-                            <label className="form-label">Creador (Director/Autor/Desarrollador)</label>
+                            <label className="form-label">Creador (Director/Autor)</label>
                             <input
                                 type="text"
                                 className="form-input"
-                                placeholder="Nombre del creador..."
+                                placeholder="Nombre..."
                                 value={formData.creator}
                                 onChange={(e) => setFormData({ ...formData, creator: e.target.value })}
                             />
                         </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Sinopsis</label>
-                            <textarea
-                                className="form-textarea"
-                                placeholder="Descripción del contenido..."
-                                value={formData.synopsis}
-                                onChange={(e) => setFormData({ ...formData, synopsis: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">🖼️ URL de la imagen de portada</label>
-                            <input
-                                type="url"
-                                className="form-input"
-                                placeholder="https://ejemplo.com/imagen.jpg"
-                                value={formData.cover_url}
-                                onChange={(e) => setFormData({ ...formData, cover_url: e.target.value })}
-                            />
-                            <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                                Pega una URL directa a una imagen (JPG, PNG, WebP)
-                            </small>
-                        </div>
+                        {showDev && (
+                            <div className="form-group">
+                                <label className="form-label">Desarrollador</label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={formData.developer}
+                                    onChange={(e) => setFormData({ ...formData, developer: e.target.value })}
+                                />
+                            </div>
+                        )}
+                        {showEpisodes && (
+                            <div className="form-group">
+                                <label className="form-label">Episodios</label>
+                                <input
+                                    type="number"
+                                    className="form-input"
+                                    value={formData.episodes}
+                                    onChange={(e) => setFormData({ ...formData, episodes: e.target.value })}
+                                />
+                            </div>
+                        )}
                     </div>
 
-                    <div className="modal-footer">
-                        <button type="button" className="btn btn-secondary" onClick={onClose}>
-                            Cancelar
-                        </button>
-                        <button
-                            type="submit"
-                            className="btn btn-primary"
-                            disabled={saving || !formData.title.trim()}
-                        >
-                            {saving ? 'Guardando...' : '💾 Guardar Cambios'}
-                        </button>
+                    <div className="form-group">
+                        <label className="form-label">Sinopsis</label>
+                        <textarea
+                            className="form-textarea"
+                            placeholder="Descripción del contenido..."
+                            value={formData.synopsis}
+                            onChange={(e) => setFormData({ ...formData, synopsis: e.target.value })}
+                        />
                     </div>
-                </form>
-            </div>
+
+                    <div className="form-group">
+                        <label className="form-label">🖼️ URL de la imagen de portada</label>
+                        <input
+                            type="url"
+                            className="form-input"
+                            placeholder="https://ejemplo.com/imagen.jpg"
+                            value={formData.cover_url}
+                            onChange={(e) => setFormData({ ...formData, cover_url: e.target.value })}
+                        />
+                        <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                            Pega una URL directa a una imagen (JPG, PNG, WebP)
+                        </small>
+                    </div>
+                </div>
+
+                <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={onClose}>
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={saving || !formData.title.trim()}
+                    >
+                        {saving ? 'Guardando...' : '💾 Guardar Cambios'}
+                    </button>
+                </div>
+            </form>
         </div>
-    );
+    </div>
+);
 }
 
 export default function ItemDetail() {
@@ -341,10 +392,16 @@ export default function ItemDetail() {
 
                 <h1>{item.title}</h1>
 
-                <div className="item-meta">
-                    {item.year && <span>📅 {item.year}</span>}
-                    {item.creator && <span>👤 {item.creator}</span>}
-                    {item.genre && <span>🏷️ {item.genre}</span>}
+                <div className="item-meta grid grid-cols-2 gap-x-md gap-y-xs">
+                    {item.year && <span>📅 Año: {item.year}</span>}
+                    {item.creator && <span>👤 Creador: {item.creator}</span>}
+                    {item.genre && <span>🏷️ Género: {item.genre}</span>}
+                    {item.platform && <span>🎮 Plat: {item.platform}</span>}
+                    {item.developer && <span>👨‍💻 Dev: {item.developer}</span>}
+                    {item.publisher && <span>🏢 Pub: {item.publisher}</span>}
+                    {item.duration_min && <span>⏱️ {item.duration_min} min</span>}
+                    {item.pages && <span>📖 {item.pages} págs</span>}
+                    {item.episodes && <span>📺 {item.episodes} eps</span>}
                     {item.avg_rating && (
                         <span className="rating">
                             <span className="rating-star">★</span>

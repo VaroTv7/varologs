@@ -5,7 +5,7 @@ import { dirname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 
 import db from './database.js';
-import { autocompleteMedia, isAIConfigured, initializeAI } from './services/gemini.js';
+import { autocompleteMedia, isAIConfigured } from './services/gemini.js';
 import { findCoverUrl, getPlaceholderCover } from './services/covers.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -151,18 +151,28 @@ app.get('/api/items/:id', (req, res) => {
 // Create item
 app.post('/api/items', (req, res) => {
     try {
-        const { type, title, year, creator, genre, synopsis, cover_url, created_by } = req.body;
+        const {
+            type, title, year, creator, genre, synopsis, cover_url, created_by,
+            platform, developer, publisher, duration_min, pages, episodes, seasons, isbn, metadata, status
+        } = req.body;
 
         if (!type || !title) {
             return res.status(400).json({ error: 'Type and title are required' });
         }
 
         const stmt = db.prepare(`
-      INSERT INTO items (type, title, year, creator, genre, synopsis, cover_url, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+        INSERT INTO items (
+            type, title, year, creator, genre, synopsis, cover_url, created_by,
+            platform, developer, publisher, duration_min, pages, episodes, seasons, isbn, metadata, status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
 
-        const result = stmt.run(type, title.trim(), year, creator, genre, synopsis, cover_url, created_by);
+        const result = stmt.run(
+            type, title.trim(), year, creator, genre, synopsis, cover_url, created_by,
+            platform, developer, publisher, duration_min, pages, episodes, seasons, isbn,
+            metadata ? JSON.stringify(metadata) : null, status
+        );
         const item = db.prepare('SELECT * FROM items WHERE id = ?').get(result.lastInsertRowid);
 
         res.status(201).json(item);
@@ -180,16 +190,28 @@ app.post('/api/items', (req, res) => {
 });
 
 // Update item
+// Update item
 app.put('/api/items/:id', (req, res) => {
     try {
-        const { title, year, creator, genre, synopsis, cover_url } = req.body;
+        const {
+            title, year, creator, genre, synopsis, cover_url,
+            platform, developer, publisher, duration_min, pages, episodes, seasons, isbn, metadata, status
+        } = req.body;
 
         const stmt = db.prepare(`
-      UPDATE items SET title = ?, year = ?, creator = ?, genre = ?, synopsis = ?, cover_url = ?
-      WHERE id = ?
-    `);
+        UPDATE items SET 
+            title = ?, year = ?, creator = ?, genre = ?, synopsis = ?, cover_url = ?,
+            platform = ?, developer = ?, publisher = ?, duration_min = ?, pages = ?, 
+            episodes = ?, seasons = ?, isbn = ?, metadata = ?, status = ?
+        WHERE id = ?
+        `);
 
-        const result = stmt.run(title, year, creator, genre, synopsis, cover_url, req.params.id);
+        const result = stmt.run(
+            title, year, creator, genre, synopsis, cover_url,
+            platform, developer, publisher, duration_min, pages, episodes, seasons, isbn,
+            metadata ? JSON.stringify(metadata) : null, status,
+            req.params.id
+        );
 
         if (result.changes === 0) {
             return res.status(404).json({ error: 'Item not found' });
@@ -456,21 +478,6 @@ app.get('/api/ai/cover', async (req, res) => {
 // AI status
 app.get('/api/ai/status', (req, res) => {
     res.json({ configured: isAIConfigured() });
-});
-
-// Configure AI
-app.post('/api/config/apikey', (req, res) => {
-    try {
-        const { apiKey } = req.body;
-        if (!apiKey || apiKey.trim().length === 0) {
-            return res.status(400).json({ error: 'API Key is required' });
-        }
-
-        initializeAI(apiKey.trim());
-        res.json({ success: true, status: 'configured' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
 });
 
 // ============== STATS ==============

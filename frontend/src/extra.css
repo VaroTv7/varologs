@@ -1,0 +1,69 @@
+/* CSS for User Management and Grid Layouts */
+
+/* User Manager */
+.user-option-wrapper {
+    position: relative;
+    display: inline-block;
+    margin: 0.5rem;
+}
+
+.applied-user-manager .user-option {
+    margin: 0;
+    /* Wrapper handles margin */
+}
+
+.delete-user-btn {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    background: var(--accent-danger);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+}
+
+.user-option-wrapper:hover .delete-user-btn {
+    opacity: 1;
+}
+
+/* Grid Layouts */
+.grid {
+    display: grid;
+}
+
+.grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.gap-sm {
+    gap: var(--spacing-sm);
+}
+
+.gap-md {
+    gap: var(--spacing-md);
+}
+
+.gap-x-md {
+    column-gap: var(--spacing-md);
+}
+
+.gap-y-xs {
+    row-gap: var(--spacing-xs);
+}
+
+/* Item Meta Grid */
+.item-meta.grid span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

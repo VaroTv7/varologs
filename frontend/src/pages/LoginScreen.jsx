@@ -67,19 +67,32 @@ export default function LoginScreen({ onLogin }) {
                                 <p className="text-secondary mb-md">Selecciona tu usuario:</p>
                                 <div className="user-list">
                                     {users.map(user => (
-                                        <button
-                                            key={user.id}
-                                            className="user-option"
-                                            onClick={() => onLogin(user)}
-                                        >
-                                            <div
-                                                className="user-avatar"
-                                                style={{ backgroundColor: user.avatar_color }}
+                                        <div key={user.id} className="user-option-wrapper applied-user-manager">
+                                            <button
+                                                className="user-option"
+                                                onClick={() => onLogin(user)}
                                             >
-                                                {user.name.charAt(0).toUpperCase()}
-                                            </div>
-                                            <span className="user-option-name">{user.name}</span>
-                                        </button>
+                                                <div
+                                                    className="user-avatar"
+                                                    style={{ backgroundColor: user.avatar_color }}
+                                                >
+                                                    {user.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <span className="user-option-name">{user.name}</span>
+                                            </button>
+                                            <button
+                                                className="delete-user-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (confirm(`¿Borrar usuario ${user.name} y todas sus reseñas?`)) {
+                                                        api(`/users/${user.id}`, { method: 'DELETE' }).then(() => loadUsers());
+                                                    }
+                                                }}
+                                                title="Borrar usuario"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
                                     ))}
                                 </div>
                                 <div className="text-secondary mb-md">— o —</div>

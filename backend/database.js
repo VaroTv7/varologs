@@ -66,12 +66,40 @@ db.exec(`
     PRIMARY KEY(list_id, item_id)
   );
 
-  -- Create indexes for performance
+  -- Indexes
   CREATE INDEX IF NOT EXISTS idx_items_type ON items(type);
   CREATE INDEX IF NOT EXISTS idx_reviews_item ON reviews(item_id);
   CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
   CREATE INDEX IF NOT EXISTS idx_lists_user ON lists(user_id);
 `);
+
+// Migration: Add new fields if they don't exist (Simple check)
+const columns = db.prepare('PRAGMA table_info(items)').all();
+const columnNames = columns.map(c => c.name);
+
+const newColumns = [
+  { name: 'platform', type: 'TEXT' },
+  { name: 'developer', type: 'TEXT' },
+  { name: 'publisher', type: 'TEXT' },
+  { name: 'duration_min', type: 'INTEGER' }, // Movies, episodes
+  { name: 'pages', type: 'INTEGER' }, // Books
+  { name: 'episodes', type: 'INTEGER' }, // Series, anime
+  { name: 'seasons', type: 'INTEGER' }, // Series
+  { name: 'isbn', type: 'TEXT' }, // Books
+  { name: 'metadata', type: 'TEXT' }, // JSON for extras
+  { name: 'status', type: 'TEXT' } // Item status (running, ended, etc)
+];
+
+newColumns.forEach(col => {
+  if (!columnNames.includes(col.name)) {
+    console.log(`Migrating: Adding ${col.name} to items table...`);
+    try {
+      db.exec(`ALTER TABLE items ADD COLUMN ${col.name} ${col.type}`);
+    } catch (err) {
+      console.error(`Error adding column ${col.name}:`, err.message);
+    }
+  }
+});
 
 console.log('Database initialized at:', dbPath);
 

@@ -1,22 +1,13 @@
 import { GoogleGenAI } from '@google/genai';
 
-let ai = null;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const ai = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
 
-export function initializeAI(apiKey) {
-    if (apiKey) {
-        ai = new GoogleGenAI({ apiKey });
-        process.env.GEMINI_API_KEY = apiKey; // Update env for consistency
-    }
-}
-
-// Initialize on load if env var exists
-if (process.env.GEMINI_API_KEY) {
-    initializeAI(process.env.GEMINI_API_KEY);
-}
-
-// Model cascade: STRICTLY Gemini 2.5 Flash
+// Model cascade: try newer models first, fallback to older ones
 const MODELS = [
-    'gemini-2.5-flash'
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash'
 ];
 
 const TYPE_TRANSLATIONS = {
@@ -48,7 +39,15 @@ Responde ÚNICAMENTE con un objeto JSON válido (sin markdown, sin \`\`\`), con 
   "year": 2024,
   "creator": "director/desarrollador/autor/artista principal",
   "genre": "género principal",
-  "synopsis": "sinopsis breve en español, máximo 3 frases"
+  "synopsis": "sinopsis breve en español, máximo 3 frases",
+  "platform": "plataformas principales (solo si es juego)",
+  "developer": "estudio desarrollador (solo si es juego)",
+  "publisher": "editora/distribuidora",
+  "duration_min": 0, // minutos (pelis) o media por episodio
+  "pages": 0, // solo libros
+  "episodes": 0, // series/anime
+  "seasons": 0, // series
+  "isbn": "ISBN-13 (solo libros)"
 }
 
 Si no encuentras información exacta, usa null en los campos desconocidos.`;
@@ -57,18 +56,14 @@ Si no encuentras información exacta, usa null en los campos desconocidos.`;
 
     for (const model of MODELS) {
         try {
-            console.log(`Trying model: ${model} with query: "${query}"`);
+            console.log(`Trying model: ${model}`);
 
             const response = await ai.models.generateContent({
                 model,
-                contents: [{
-                    role: 'user',
-                    parts: [{ text: prompt }]
-                }],
+                contents: prompt,
                 config: {
                     temperature: 0.3,
-                    maxOutputTokens: 500,
-                    responseMimeType: 'application/json'
+                    maxOutputTokens: 500
                 }
             });
 
@@ -80,11 +75,7 @@ Si no encuentras información exacta, usa null en los campos desconocidos.`;
             console.log(`Success with ${model}`);
             return data;
         } catch (error) {
-            console.error(`Model ${model} failed!`);
-            console.error('Error Details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
-            if (error.response) {
-                console.error('API Response:', JSON.stringify(error.response, null, 2));
-            }
+            console.log(`Model ${model} failed:`, error.message);
             lastError = error;
         }
     }
