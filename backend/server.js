@@ -76,6 +76,31 @@ app.delete('/api/users/:id', (req, res) => {
     }
 });
 
+// Update user
+app.put('/api/users/:id', (req, res) => {
+    try {
+        const { name, avatar_color } = req.body;
+        if (!name || name.trim().length === 0) {
+            return res.status(400).json({ error: 'Name is required' });
+        }
+
+        const stmt = db.prepare('UPDATE users SET name = ?, avatar_color = COALESCE(?, avatar_color) WHERE id = ?');
+        const result = stmt.run(name.trim(), avatar_color, req.params.id);
+
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
+        res.json(user);
+    } catch (error) {
+        if (error.message.includes('UNIQUE')) {
+            return res.status(409).json({ error: 'User name already exists' });
+        }
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ============== ITEMS ==============
 
 // Get all items with optional filters
