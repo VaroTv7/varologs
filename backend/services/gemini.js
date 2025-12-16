@@ -10,10 +10,11 @@ export function setApiKey(key) {
     console.log('Gemini API Key updated');
 }
 
-// Model cascade: Gemini 3 Pro first, then 2.5 Flash as fallback
+// Model cascade: Try 2.5 first, fallback to 2.0 if overloaded/quota
 const MODELS = [
     'gemini-2.5-pro',
-    'gemini-2.5-flash'
+    'gemini-2.5-flash',
+    'gemini-2.0-flash'
 ];
 
 const TYPE_TRANSLATIONS = {
