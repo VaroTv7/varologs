@@ -11,8 +11,8 @@ WORKDIR /build
 # Copy frontend package files
 COPY frontend/package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production=false
+# Install dependencies (use npm install since no lock file)
+RUN npm install
 
 # Copy frontend source
 COPY frontend/ ./
@@ -34,7 +34,7 @@ WORKDIR /app
 COPY backend/package*.json ./
 
 # Install production dependencies
-RUN npm ci --only=production && \
+RUN npm install --omit=dev && \
     npm cache clean --force
 
 # Copy backend source
@@ -47,7 +47,7 @@ COPY --from=frontend-builder /build/dist ./frontend/dist
 RUN mkdir -p /app/data && \
     chown -R node:node /app
 
-# Switch to non-root user
+# Switch to non-root user (node user already exists in alpine)
 USER node
 
 # Expose port
