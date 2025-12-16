@@ -11,7 +11,7 @@ WORKDIR /build
 # Copy frontend package files
 COPY frontend/package*.json ./
 
-# Install dependencies (use npm install since no lock file)
+# Install dependencies
 RUN npm install
 
 # Copy frontend source
@@ -30,24 +30,28 @@ RUN apk add --no-cache python3 make g++ sqlite
 
 WORKDIR /app
 
-# Copy backend package files
-COPY backend/package*.json ./
+# Create backend directory
+RUN mkdir -p /app/backend /app/frontend/dist /app/data
 
-# Install production dependencies
+# Install backend dependencies
+COPY backend/package*.json ./backend/
+WORKDIR /app/backend
 RUN npm install --omit=dev && \
     npm cache clean --force
 
 # Copy backend source
 COPY backend/ ./
 
+# Switch back to root to copy frontend
+WORKDIR /app
+
 # Copy built frontend from stage 1
 COPY --from=frontend-builder /build/dist ./frontend/dist
 
-# Create data directory
-RUN mkdir -p /app/data && \
-    chown -R node:node /app
+# Set ownership
+RUN chown -R node:node /app
 
-# Switch to non-root user (node user already exists in alpine)
+# Switch to non-root user
 USER node
 
 # Expose port
@@ -63,4 +67,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3001/api/health || exit 1
 
 # Start server
-CMD ["node", "server.js"]
+CMD ["node", "backend/server.js"]
