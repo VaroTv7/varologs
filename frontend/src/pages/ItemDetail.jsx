@@ -20,6 +20,179 @@ const STATUS_OPTIONS = [
     { value: 'abandoned', label: '❌ Abandonado' }
 ];
 
+// Edit Modal Component
+function EditItemModal({ item, onClose, onSave }) {
+    const [formData, setFormData] = useState({
+        title: item.title || '',
+        year: item.year || '',
+        creator: item.creator || '',
+        genre: item.genre || '',
+        synopsis: item.synopsis || '',
+        cover_url: item.cover_url || ''
+    });
+    const [saving, setSaving] = useState(false);
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        if (!formData.title.trim()) return;
+
+        setSaving(true);
+        try {
+            await api(`/items/${item.id}`, {
+                method: 'PUT',
+                body: {
+                    title: formData.title.trim(),
+                    year: formData.year ? parseInt(formData.year) : null,
+                    creator: formData.creator.trim() || null,
+                    genre: formData.genre.trim() || null,
+                    synopsis: formData.synopsis.trim() || null,
+                    cover_url: formData.cover_url.trim() || null
+                }
+            });
+            onSave();
+        } catch (err) {
+            console.error('Error updating item:', err);
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    const typeInfo = MEDIA_TYPES[item.type] || { label: item.type, icon: '📋' };
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                    <h2 className="modal-title">✏️ Editar {typeInfo.label}</h2>
+                    <button className="modal-close" onClick={onClose}>×</button>
+                </div>
+
+                <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
+                        <div className="flex gap-md mb-lg">
+                            {/* Cover Preview */}
+                            <div style={{
+                                width: 120,
+                                flexShrink: 0,
+                                aspectRatio: '2/3',
+                                background: 'var(--bg-tertiary)',
+                                borderRadius: 'var(--border-radius)',
+                                overflow: 'hidden'
+                            }}>
+                                {formData.cover_url ? (
+                                    <img
+                                        src={formData.cover_url}
+                                        alt="Cover"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                        onError={(e) => e.target.style.display = 'none'}
+                                    />
+                                ) : (
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        height: '100%',
+                                        fontSize: '2rem',
+                                        opacity: 0.3
+                                    }}>
+                                        {typeInfo.icon}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div style={{ flex: 1 }}>
+                                <div className="form-group">
+                                    <label className="form-label">Título *</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                        required
+                                    />
+                                </div>
+
+                                <div className="flex gap-sm">
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label className="form-label">Año</label>
+                                        <input
+                                            type="number"
+                                            className="form-input"
+                                            placeholder="2024"
+                                            min="1900"
+                                            max="2030"
+                                            value={formData.year}
+                                            onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        <label className="form-label">Género</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            placeholder="Acción"
+                                            value={formData.genre}
+                                            onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Creador (Director/Autor/Desarrollador)</label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                placeholder="Nombre del creador..."
+                                value={formData.creator}
+                                onChange={(e) => setFormData({ ...formData, creator: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Sinopsis</label>
+                            <textarea
+                                className="form-textarea"
+                                placeholder="Descripción del contenido..."
+                                value={formData.synopsis}
+                                onChange={(e) => setFormData({ ...formData, synopsis: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">🖼️ URL de la imagen de portada</label>
+                            <input
+                                type="url"
+                                className="form-input"
+                                placeholder="https://ejemplo.com/imagen.jpg"
+                                value={formData.cover_url}
+                                onChange={(e) => setFormData({ ...formData, cover_url: e.target.value })}
+                            />
+                            <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                                Pega una URL directa a una imagen (JPG, PNG, WebP)
+                            </small>
+                        </div>
+                    </div>
+
+                    <div className="modal-footer">
+                        <button type="button" className="btn btn-secondary" onClick={onClose}>
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={saving || !formData.title.trim()}
+                        >
+                            {saving ? 'Guardando...' : '💾 Guardar Cambios'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
 export default function ItemDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -28,6 +201,7 @@ export default function ItemDetail() {
     const [item, setItem] = useState(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
 
     // My review state
     const [myReview, setMyReview] = useState({
@@ -92,6 +266,11 @@ export default function ItemDetail() {
         }
     }
 
+    function handleEditSave() {
+        setShowEditModal(false);
+        loadItem(); // Reload to show updated data
+    }
+
     if (loading) {
         return (
             <div className="loading">
@@ -133,20 +312,32 @@ export default function ItemDetail() {
                     )}
                 </div>
 
-                <button
-                    className="btn btn-danger btn-lg mt-md"
-                    style={{ width: '100%' }}
-                    onClick={handleDelete}
-                >
-                    🗑️ Eliminar
-                </button>
+                {/* Action Buttons */}
+                <div className="flex gap-sm mt-md">
+                    <button
+                        className="btn btn-primary btn-lg"
+                        style={{ flex: 1 }}
+                        onClick={() => setShowEditModal(true)}
+                    >
+                        ✏️ Editar
+                    </button>
+                    <button
+                        className="btn btn-danger btn-lg"
+                        onClick={handleDelete}
+                        title="Eliminar"
+                    >
+                        🗑️
+                    </button>
+                </div>
             </div>
 
             {/* Info */}
             <div className="item-info">
-                <span className="type-badge">
-                    {typeInfo.icon} {typeInfo.label}
-                </span>
+                <div className="flex items-center gap-sm mb-md">
+                    <span className="type-badge">
+                        {typeInfo.icon} {typeInfo.label}
+                    </span>
+                </div>
 
                 <h1>{item.title}</h1>
 
@@ -253,6 +444,15 @@ export default function ItemDetail() {
                     </div>
                 )}
             </div>
+
+            {/* Edit Modal */}
+            {showEditModal && (
+                <EditItemModal
+                    item={item}
+                    onClose={() => setShowEditModal(false)}
+                    onSave={handleEditSave}
+                />
+            )}
         </div>
     );
 }
