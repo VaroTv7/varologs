@@ -37,11 +37,16 @@ export function setApiKey(key) {
     }
 }
 
-// Model cascade: Try 2.5 first, fallback to 2.0, then 1.5 if others fail/overloaded
+// Model cascade: Waterfall from most powerful/newest to most stable/efficient
 const MODELS = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash'
+    'gemini-3-pro-preview',     // Experimental / Future
+    'gemini-2.5-pro',           // High Intelligence
+    'gemini-2.5-flash-lite',    // Efficient High Int
+    'gemini-2.5-flash',         // Fast High Int
+    'gemini-2.0-flash-lite',    // Efficient Mid
+    'gemini-2.0-flash',         // Stable Mid
+    'gemini-1.5-pro',           // Legacy Pro
+    'gemini-1.5-flash'          // Ultimate Fallback (Stable)
 ];
 
 const TYPE_TRANSLATIONS = {
@@ -89,7 +94,6 @@ Si no encuentras el ítem exacto, devuelve null.`;
         try {
             console.log(`Trying AI model: ${model}`);
 
-            // Note: @google/genai SDK usage may vary, sticking to standard generateContent
             const response = await aiClient.models.generateContent({
                 model: model,
                 contents: prompt,
@@ -110,16 +114,14 @@ Si no encuentras el ítem exacto, devuelve null.`;
 
         } catch (error) {
             console.warn(`Model ${model} failed: ${error.message}`);
-
-            // If quota exceeded, we definitely want to try the next model (often lower tier)
-            if (error.message.includes('429') || error.message.includes('quota')) {
-                continue;
-            }
             lastError = error;
+            // Always continue to the next model in the list, unless it's a fatal config error
+            // (But we assume config is correct and valid for at least one model)
+            continue;
         }
     }
 
-    throw new Error(`AI Autocomplete failed: ${lastError?.message || 'Unknown error'}`);
+    throw new Error(`AI Autocomplete failed after trying all models. Last error: ${lastError?.message || 'Unknown code'}`);
 }
 
 export async function suggestCoverSearch(title, type, year) {
