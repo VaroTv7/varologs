@@ -66,7 +66,13 @@ app.post('/api/users', (req, res) => {
 // Delete user
 app.delete('/api/users/:id', (req, res) => {
     try {
-        const result = db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
+        const userId = req.params.id;
+
+        // First, set created_by to NULL for items created by this user
+        db.prepare('UPDATE items SET created_by = NULL WHERE created_by = ?').run(userId);
+
+        // Now delete the user (reviews and lists will cascade automatically)
+        const result = db.prepare('DELETE FROM users WHERE id = ?').run(userId);
         if (result.changes === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
