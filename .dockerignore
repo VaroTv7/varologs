@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Data directory (SQLite DB)
+data/
+
+# Environment files
+.env
+.env.local
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+docs/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test
+coverage/
+*.test.js
+
+# Development files
+frontend/src/
+frontend/public/
+frontend/index.html
+frontend/vite.config.js
+frontend/package*.json
+backend/*.md
