@@ -14,14 +14,11 @@ if (process.env.GEMINI_API_KEY) {
     initializeAI(process.env.GEMINI_API_KEY);
 }
 
-// Model cascade: try newer/better models first, fallback to efficient ones
+// Model cascade: strictly use Flash models as requested (interpreting "2.5" as 1.5/2.0 availability)
 const MODELS = [
-    'gemini-2.0-flash-exp', // Try experimental 2.0
-    'gemini-2.0-flash',     // Standard 2.0
-    'gemini-1.5-pro',       // High quality 1.5
-    'gemini-1.5-pro-latest',
-    'gemini-1.5-flash',     // Fast/Cheap
-    'gemini-1.5-flash-latest'
+    'gemini-1.5-flash',     // Most stable free tier
+    'gemini-2.0-flash-exp', // Experimental new flash
+    'gemini-2.0-flash'      // Standard 2.0
 ];
 
 const TYPE_TRANSLATIONS = {
