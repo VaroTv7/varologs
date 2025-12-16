@@ -27,7 +27,16 @@ export default function AddItemModal({ onClose, onSuccess }) {
         creator: '',
         genre: '',
         synopsis: '',
-        cover_url: ''
+        cover_url: '',
+        platform: '',
+        developer: '',
+        publisher: '',
+        duration_min: '',
+        pages: '',
+        episodes: '',
+        seasons: '',
+        isbn: '',
+        status: 'pending'
     });
 
     async function handleAIAutocomplete(e) {
@@ -50,7 +59,16 @@ export default function AddItemModal({ onClose, onSuccess }) {
                 creator: aiData.creator || '',
                 genre: aiData.genre || '',
                 synopsis: aiData.synopsis || '',
-                cover_url: ''
+                cover_url: '',
+                platform: aiData.platform || '',
+                developer: aiData.developer || '',
+                publisher: aiData.publisher || '',
+                duration_min: aiData.duration_min || '',
+                pages: aiData.pages || '',
+                episodes: aiData.episodes || '',
+                seasons: aiData.seasons || '',
+                isbn: aiData.isbn || '',
+                status: 'pending'
             });
 
             // Try to get cover
@@ -91,7 +109,16 @@ export default function AddItemModal({ onClose, onSuccess }) {
                     genre: formData.genre.trim() || null,
                     synopsis: formData.synopsis.trim() || null,
                     cover_url: formData.cover_url.trim() || null,
-                    created_by: user.id
+                    created_by: user.id,
+                    platform: formData.platform.trim() || null,
+                    developer: formData.developer.trim() || null,
+                    publisher: formData.publisher.trim() || null,
+                    duration_min: formData.duration_min ? parseInt(formData.duration_min) : null,
+                    pages: formData.pages ? parseInt(formData.pages) : null,
+                    episodes: formData.episodes ? parseInt(formData.episodes) : null,
+                    seasons: formData.seasons ? parseInt(formData.seasons) : null,
+                    isbn: formData.isbn.trim() || null,
+                    status: formData.status || 'pending'
                 }
             });
 
@@ -219,8 +246,8 @@ export default function AddItemModal({ onClose, onSuccess }) {
                                         />
                                     </div>
 
-                                    <div className="flex gap-sm">
-                                        <div className="form-group" style={{ flex: 1 }}>
+                                    <div className="grid grid-cols-2 gap-sm">
+                                        <div className="form-group">
                                             <label className="form-label">Año</label>
                                             <input
                                                 type="number"
@@ -232,7 +259,7 @@ export default function AddItemModal({ onClose, onSuccess }) {
                                                 onChange={(e) => setFormData({ ...formData, year: e.target.value })}
                                             />
                                         </div>
-                                        <div className="form-group" style={{ flex: 1 }}>
+                                        <div className="form-group">
                                             <label className="form-label">Género</label>
                                             <input
                                                 type="text"
@@ -242,19 +269,79 @@ export default function AddItemModal({ onClose, onSuccess }) {
                                                 onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
                                             />
                                         </div>
+                                        {['game'].includes(type) && (
+                                            <div className="form-group">
+                                                <label className="form-label">Plataforma</label>
+                                                <input
+                                                    type="text"
+                                                    className="form-input"
+                                                    placeholder="Switch, PC..."
+                                                    value={formData.platform}
+                                                    onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
+                                                />
+                                            </div>
+                                        )}
+                                        {['movie', 'anime'].includes(type) && (
+                                            <div className="form-group">
+                                                <label className="form-label">Duración (min)</label>
+                                                <input
+                                                    type="number"
+                                                    className="form-input"
+                                                    placeholder="120"
+                                                    value={formData.duration_min}
+                                                    onChange={(e) => setFormData({ ...formData, duration_min: e.target.value })}
+                                                />
+                                            </div>
+                                        )}
+                                        {['book', 'manga'].includes(type) && (
+                                            <div className="form-group">
+                                                <label className="form-label">Páginas</label>
+                                                <input
+                                                    type="number"
+                                                    className="form-input"
+                                                    placeholder="350"
+                                                    value={formData.pages}
+                                                    onChange={(e) => setFormData({ ...formData, pages: e.target.value })}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="form-group">
-                                <label className="form-label">Creador (Director/Autor/Desarrollador)</label>
-                                <input
-                                    type="text"
-                                    className="form-input"
-                                    placeholder="Nombre del creador..."
-                                    value={formData.creator}
-                                    onChange={(e) => setFormData({ ...formData, creator: e.target.value })}
-                                />
+                            <div className="grid grid-cols-2 gap-sm">
+                                <div className="form-group">
+                                    <label className="form-label">Creador (Director/Autor)</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="Nombre..."
+                                        value={formData.creator}
+                                        onChange={(e) => setFormData({ ...formData, creator: e.target.value })}
+                                    />
+                                </div>
+                                {['game'].includes(type) && (
+                                    <div className="form-group">
+                                        <label className="form-label">Desarrollador</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            value={formData.developer}
+                                            onChange={(e) => setFormData({ ...formData, developer: e.target.value })}
+                                        />
+                                    </div>
+                                )}
+                                {['series', 'anime'].includes(type) && (
+                                    <div className="form-group">
+                                        <label className="form-label">Episodios</label>
+                                        <input
+                                            type="number"
+                                            className="form-input"
+                                            value={formData.episodes}
+                                            onChange={(e) => setFormData({ ...formData, episodes: e.target.value })}
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             <div className="form-group">
