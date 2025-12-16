@@ -453,6 +453,20 @@ app.delete('/api/lists/:id/items/:itemId', (req, res) => {
     }
 });
 
+// ============== CONFIG ==============
+app.post('/api/config/apikey', (req, res) => {
+    try {
+        const { apiKey } = req.body;
+        if (!apiKey) {
+            return res.status(400).json({ error: 'API Key is required' });
+        }
+        setApiKey(apiKey);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ============== AI ENDPOINTS ==============
 
 // Autocomplete media info

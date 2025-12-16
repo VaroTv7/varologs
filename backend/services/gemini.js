@@ -1,13 +1,40 @@
 import { GoogleGenAI } from '@google/genai';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-let geminiApiKey = process.env.GEMINI_API_KEY;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const CONFIG_PATH = join(__dirname, '..', '..', 'data', 'config.json');
+
+function loadConfig() {
+    try {
+        if (existsSync(CONFIG_PATH)) {
+            return JSON.parse(readFileSync(CONFIG_PATH, 'utf-8'));
+        }
+    } catch (e) {
+        console.error('Failed to load config:', e);
+    }
+    return {};
+}
+
+let geminiApiKey = process.env.GEMINI_API_KEY || loadConfig().geminiApiKey;
 let aiClient = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 
-// Update the API key dynamically
+// Update the API key dynamically and persist it
 export function setApiKey(key) {
     geminiApiKey = key;
     aiClient = new GoogleGenAI({ apiKey: key });
-    console.log('Gemini API Key updated');
+
+    // Persist
+    try {
+        const config = loadConfig();
+        config.geminiApiKey = key;
+        writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
+        console.log('Gemini API Key updated and saved');
+    } catch (e) {
+        console.error('Failed to save config:', e);
+    }
 }
 
 // Model cascade: Try 2.5 first, fallback to 2.0 if overloaded/quota
